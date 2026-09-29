@@ -3,14 +3,19 @@
 #include <pspdebug.h>
 
 #include <stdio.h>
-#include <string.h>
 
 
-static uint32_t* gVram = 0;
+static uint32_t* gVram =
+    0;
 
-static const int SCREEN_W = 480;
-static const int SCREEN_H = 272;
-static const int BUFFER_W = 512;
+static const int SCREEN_W =
+    480;
+
+static const int SCREEN_H =
+    272;
+
+static const int BUFFER_W =
+    512;
 
 
 Texture::Texture()
@@ -22,11 +27,10 @@ Texture::Texture()
 
 bool Texture::valid() const
 {
-    return (
+    return
         width > 0 &&
         height > 0 &&
-        !pixels.empty()
-    );
+        !pixels.empty();
 }
 
 
@@ -34,8 +38,12 @@ bool Texture::load(
     const std::string& path
 )
 {
-    width = 0;
-    height = 0;
+    width =
+        0;
+
+    height =
+        0;
+
     pixels.clear();
 
 
@@ -115,8 +123,11 @@ bool Texture::load(
     {
         fclose(file);
 
-        width = 0;
-        height = 0;
+        width =
+            0;
+
+        height =
+            0;
 
         return false;
     }
@@ -149,8 +160,11 @@ bool Texture::load(
 
             pixels.clear();
 
-            width = 0;
-            height = 0;
+            width =
+                0;
+
+            height =
+                0;
 
             return false;
         }
@@ -188,9 +202,18 @@ void videoInit()
     pspDebugScreenInit();
 
 
+    /*
+        PSP VRAM uncached alias.
+
+        pspDebugScreenGetVramBase() does not exist
+        in the current PSPSDK build, so we use the
+        PSP framebuffer address directly.
+    */
+
     gVram =
-        (uint32_t*)
-        pspDebugScreenGetVramBase();
+        reinterpret_cast<uint32_t*>(
+            0x44000000
+        );
 }
 
 
@@ -200,8 +223,8 @@ static uint32_t alphaBlend(
 )
 {
     uint32_t a =
-        (src >> 24)
-        & 0xFF;
+        (src >> 24) &
+        0xFF;
 
 
     if (a == 255)
@@ -213,27 +236,29 @@ static uint32_t alphaBlend(
 
 
     uint32_t sr =
-        src & 0xFF;
+        src &
+        0xFF;
 
     uint32_t sg =
-        (src >> 8)
-        & 0xFF;
+        (src >> 8) &
+        0xFF;
 
     uint32_t sb =
-        (src >> 16)
-        & 0xFF;
+        (src >> 16) &
+        0xFF;
 
 
     uint32_t dr =
-        dst & 0xFF;
+        dst &
+        0xFF;
 
     uint32_t dg =
-        (dst >> 8)
-        & 0xFF;
+        (dst >> 8) &
+        0xFF;
 
     uint32_t db =
-        (dst >> 16)
-        & 0xFF;
+        (dst >> 16) &
+        0xFF;
 
 
     uint32_t inv =
@@ -380,6 +405,15 @@ void drawRect(
     uint32_t color
 )
 {
+    if (
+        w <= 0 ||
+        h <= 0
+    )
+    {
+        return;
+    }
+
+
     fillRect(
         x,
         y,
@@ -518,7 +552,8 @@ void drawTexture(
 
             uint32_t* destination =
                 gVram +
-                screenY * BUFFER_W +
+                screenY *
+                BUFFER_W +
                 screenX;
 
 
