@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mahjong HK Hybrid</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='game.css') }}">
+</head>
+<body>
+<button id="musicToggle" type="button">⏸ Music</button>
+<main class="game-shell">
+  <h1 class="game-title">The Deer's MahJong Table of Misfortune</h1>
+  <header class="topbar">
+    <div class="trainer-counter" title="Browsers currently training">
+      <span class="trainer-dot"></span>
+      <span>TRAINING NOW</span>
+      <b id="trainerCount">1</b>
+    </div>
+    
+    <div><h1>MAHJONG <span>HK HYBRID</span></h1><p>Training Table · You vs 3 Bots</p></div>
+    <div class="top-actions"><span id="wall">Wall · —</span><button id="newBtn">NEW HAND</button></div>
+  </header>
+
+  <section class="table" aria-label="Mahjong table">
+    <article class="seat north" id="seat2"></article>
+    <article class="seat eastside" id="seat3"></article>
+
+    <section class="felt">
+      <div class="turn-pill" id="turnPill">Ready</div>
+      <div id="claimAlert" class="claim-alert hidden"></div>
+      <div class="river-wrap">
+        <div class="river-label">DISCARDS</div>
+        <div class="river" id="river"></div>
+      </div>
+      <div class="last" id="lastDiscard"></div>
+    </section>
+
+    <article class="seat west" id="seat1"></article>
+    <article class="seat south" id="seat0"></article>
+  </section>
+
+  <section class="messagebar" id="message" aria-live="polite">Press NEW HAND to deal.</section>
+
+  <section class="actionbar" id="actions">
+    <button id="mahjongBtn" class="danger hidden">MAHJONG</button>
+    <button id="mrhBtn" class="special hidden manual-mrh">DECLARE MRH</button>
+    <div id="claimButtons"></div><div id="kongButtons"></div>
+  </section>
+
+  <section class="hand-panel">
+    <div class="hand-head"><div><b>YOUR HAND</b><span>Tap a tile when it is your turn to discard.</span></div><span id="handCount"></span></div>
+    <div class="hand" id="hand"></div>
+  </section>
+
+  <section id="result" class="result hidden"></section>
+  <div class="doman-credit">Doman-style tile faces adapted from the supplied FFXIV Riichi Mahjong STL set. FINAL FANTASY XIV © SQUARE ENIX.</div>
+</main>
+
+<audio id="bgMusic" src="/static/audio/background.mp3" loop preload="auto"></audio>
+
+<script>
+
+const bgMusic = document.getElementById("bgMusic");
+
+if (bgMusic) {
+  bgMusic.volume = 0.35;
+  bgMusic.loop = true;
+  bgMusic.setAttribute("playsinline", "");
+
+  let musicStarted = false;
+
+  const startBackgroundMusic = async () => {
+    if (musicStarted && !bgMusic.paused) return;
+
+    try {
+      await bgMusic.play();
+      musicStarted = true;
+      removeMusicUnlockListeners();
+    } catch (_) {}
+  };
+
+  const removeMusicUnlockListeners = () => {
+    document.removeEventListener("touchstart", startBackgroundMusic);
+    document.removeEventListener("touchend", startBackgroundMusic);
+    document.removeEventListener("pointerup", startBackgroundMusic);
+    document.removeEventListener("click", startBackgroundMusic);
+    document.removeEventListener("keydown", startBackgroundMusic);
+  };
+
+  startBackgroundMusic();
+
+  document.addEventListener("touchstart", startBackgroundMusic, { passive: true });
+  document.addEventListener("touchend", startBackgroundMusic, { passive: true });
+  document.addEventListener("pointerup", startBackgroundMusic, { passive: true });
+  document.addEventListener("click", startBackgroundMusic);
+  document.addEventListener("keydown", startBackgroundMusic);
+
+}
+const musicToggle = document.getElementById("musicToggle");
+
+if (musicToggle && bgMusic) {
+  musicToggle.addEventListener("click", async () => {
+    if (bgMusic.paused) {
+      try {
+        await bgMusic.play();
+        musicToggle.textContent = "⏸ Music";
+      } catch (_) {}
+    } else {
+      bgMusic.pause();
+      musicToggle.textContent = "▶ Music";
+    }
+  });
+}
+
+const TILE={
+ M1:"🀇",M2:"🀈",M3:"🀉",M4:"🀊",M5:"🀋",M6:"🀌",M7:"🀍",M8:"🀎",M9:"🀏",
+ B1:"🀐",B2:"🀑",B3:"🀒",B4:"🀓",B5:"🀔",B6:"🀕",B7:"🀖",B8:"🀗",B9:"🀘",
+ D1:"🀙",D2:"🀚",D3:"🀛",D4:"🀜",D5:"🀝",D6:"🀞",D7:"🀟",D8:"🀠",D9:"🀡",
+ E:"🀀",S:"🀁",W:"🀂",N:"🀃",RD:"🀄",GD:"🀅",WD:"🀆",J:"★"
+};
+let g=null, busy=false, botTimer=null;
+const el=id=>document.getElementById(id);
+function face(t){return TILE[t]||t}
+function tileNode(t,clickable=false,small=false){
+ const b=document.createElement("button"); b.type="button";
+ b.className="mjtile"+(small?" small":"")+(clickable?" playable":"");
+ const img=document.createElement("img");
+ img.className="tile-face"; img.src="/static/tiles/doman/"+t+".png";
+ img.alt=face(t); img.draggable=false;
+ img.onerror=()=>{img.remove(); b.textContent=face(t);};
+ b.appendChild(img); b.title=t; b.setAttribute("aria-label",t);
+ b.disabled=!clickable; return b;
+}
+function backNode(){
+ const d=document.createElement("span");d.className="tileback";d.textContent="◆";return d;
+}
+async function request(url,body){
+ if(busy)return null; busy=true;
+ try{
+  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})});
+  const d=await r.json(); if(!r.ok) throw new Error(d.error||"Request failed"); return d;
+ }catch(e){alert(e.message);return null}finally{busy=false}
+}
+function scheduleBot(){
+ if(botTimer){clearTimeout(botTimer);botTimer=null}
+ if(!g || g.winner || g.claim_prompt || g.turn===0) return;
+ botTimer=setTimeout(async()=>{
+   botTimer=null;
+   const d=await request(`/api/game/${g.id}/bot-step`,{});
+   if(d){g=d;render()}
+ },2000);
+}
+async function newHand(){
+ if(botTimer){clearTimeout(botTimer);botTimer=null}
+ const d=await request("/api/game/new",{});
+ if(d){g=d;render()}
+}
+async function action(a,extra={}){
+ if(!g)return;
+ if(botTimer){clearTimeout(botTimer);botTimer=null}
+ const d=await request(`/api/game/${g.id}/action`,{action:a,...extra});
+ if(d){g=d;render()}
+}
+function meldBlock(m){
+ const x=document.createElement("div");x.className="meld";
+ m.logical.forEach(t=>x.appendChild(tileNode(t,false,true)));
+ const lab=document.createElement("span");lab.textContent=m.kind;x.appendChild(lab);return x;
+}
+function renderSeat(i){
+ const p=g.players[i], box=el("seat"+i);box.innerHTML="";
+ box.classList.toggle("active-turn",!g.winner && !g.claim_prompt && g.turn===i);
+ const head=document.createElement("div");head.className="seathead";
+ head.innerHTML=`<b>${p.name}</b><span>${p.mrh?"MRH · ":""}${p.hand_count} tiles</span>`;box.appendChild(head);
+ const concealed=document.createElement("div");concealed.className="concealed";
+ const isWinner=!!g.winner && g.winner.seat===i;
+ if(i!==0){
+   if(isWinner && Array.isArray(g.winner_hand)){
+     concealed.classList.add("revealed-winner");
+     g.winner_hand.forEach(t=>concealed.appendChild(tileNode(t,false,true)));
+   }else{
+     for(let n=0;n<Math.min(p.hand_count,14);n++)concealed.appendChild(backNode());
+   }
+ }
+ box.appendChild(concealed);
+ const melds=document.createElement("div");melds.className="meldrow";
+ if(p.melds.length){const tag=document.createElement("div");tag.className="meld-label";tag.textContent="FORMED SETS";melds.appendChild(tag)}
+ p.melds.forEach(m=>melds.appendChild(meldBlock(m)));box.appendChild(melds);
+}
+function renderRiver(){
+ const r=el("river");r.innerHTML="";
+ (g.river||[]).forEach((x,idx)=>{
+   const n=tileNode(x.tile,false,true);
+   if(idx===g.river.length-1 && g.last_discard)n.classList.add("last-tile");
+   r.appendChild(n);
+ });
+ el("lastDiscard").textContent=g.last_discard?`${g.players[g.last_discard.seat].name} → ${face(g.last_discard.tile)}`:"";
+ const a=el("claimAlert");
+ if(g.claim_prompt){
+   a.classList.remove("hidden");
+   const pos=g.claim_prompt.position;
+   const action=g.claim_prompt.allowed;
+   a.innerHTML=`<strong>YOUR DECISION</strong><span>${pos} PLAYER discarded ${face(g.claim_prompt.tile)}</span><b>Choose DRAW (PASS) or ${action} (${pos.charAt(0)})</b>`;
+ }else{a.classList.add("hidden");a.innerHTML=""}
+}
+function renderActions(){
+ el("mahjongBtn").classList.toggle("hidden",!g.actions.mahjong);
+ el("mrhBtn").classList.toggle("hidden",!g.actions.declare_mrh);
+ const c=el("claimButtons");c.innerHTML="";
+ const pos=g.claim_prompt?g.claim_prompt.position:"";
+ const initial=pos?pos.charAt(0):"";
+ if(g.actions.pass) addAction(c,"DRAW (PASS)","muted",()=>action("pass"));
+ if(g.actions.win_discard) addAction(c,`MAHJONG · ${initial}`, "danger",()=>action("win_discard"));
+ if(g.actions.kong_discard) addAction(c,`KONG (${initial})`,"special",()=>action("kong_discard"));
+ if(g.actions.pung) addAction(c,`PUNG (${initial})`,"",()=>action("pung"));
+ (g.actions.chi_options||[]).forEach(seq=>addAction(c,`CHOW (${initial}) · ${seq.map(face).join(" ")}`, "",()=>action("chi",{sequence:seq})));
+ const k=el("kongButtons");k.innerHTML="";
+ (g.actions.kongs||[]).forEach(t=>addAction(k,"KONG · "+face(t),"special",()=>action("kong",{tile:t})));
+}
+function addAction(parent,label,cls,fn){const b=document.createElement("button");b.type="button";b.className=cls;b.textContent=label;b.addEventListener("click",fn);parent.appendChild(b)}
+function renderHand(){
+ const h=el("hand");h.innerHTML="";const playable=!!g.actions.discard&&!g.winner;
+ let drawMarked=false;
+ g.players[0].hand.forEach(t=>{
+   const locked=playable && g.players[0].claim_discard_lock && t===g.players[0].claim_discard_lock;
+   const b=tileNode(t,playable && !locked);
+   if(locked){
+     b.classList.add("claim-discard-locked");
+     b.title=t+" · Cannot discard immediately after CHOW/PUNG claim";
+     b.setAttribute("aria-label",t+" unavailable after claim");
+   }
+   if(!drawMarked && g.players[0].just_drew && t===g.players[0].just_drew){
+     b.classList.add("drawn-tile");
+     b.setAttribute("aria-label","Just drawn tile");
+     drawMarked=true;
+   }
+   if(playable && !locked)b.addEventListener("click",()=>action("discard",{tile:t}));
+   h.appendChild(b)
+ });
+ el("handCount").textContent=`${g.players[0].hand_count} concealed`;
+}
+function renderResult(){
+ const r=el("result");
+ if(!g.winner){r.classList.add("hidden");r.innerHTML="";return}
+ r.classList.remove("hidden");
+ let s=`<div class="winner"><span>HAND COMPLETE</span><h2>${g.winner.name}</h2>`;
+ if(g.score!==null)s+=`<strong>${g.score} POINTS</strong>`;
+ s+="</div>";
+ if(g.winning_structure){
+   const ws=g.winning_structure;
+   s+=`<div class="win-structure"><h3>VALIDATED WINNING HAND</h3>`;
+   s+=`<div class="win-melds">${ws.melds.map(m=>`<span><b>${m.kind}</b> ${m.logical.map(face).join(" ")}</span>`).join("")}</div>`;
+   s+=`<div class="win-pair"><b>PAIR</b> ${ws.pair.map(face).join(" ")}</div></div>`;
+ }
+ if(g.breakdown.length)s+=`<div class="breakdown">${g.breakdown.map(x=>`<div><span>${x.label}</span><b>${x.points>=0?"+":""}${x.points}</b></div>`).join("")}</div>`;
+ if(g.human_mrh_penalty===-20){
+   s+=`<div class="human-penalty"><span>YOUR MRH DECLARATION — FAILED TO WIN</span><b>-20 TO YOU</b></div>`;
+ }
+ r.innerHTML=s;
+}
+function render(){
+ [0,1,2,3].forEach(renderSeat);renderRiver();renderActions();renderHand();renderResult();
+ el("wall").textContent=`Wall · ${g.wall_count}`;
+ el("message").textContent=g.message;
+ el("turnPill").textContent=g.winner?"HAND OVER":`TURN · ${g.players[g.turn].name}`;
+ scheduleBot();
+}
+el("newBtn").addEventListener("click",newHand);
+el("mahjongBtn").addEventListener("click",()=>action("mahjong"));
+el("mrhBtn").addEventListener("click",()=>action("mrh"));
+newHand();
+
+const trainingSessionId=(window.crypto && crypto.randomUUID)
+ ? crypto.randomUUID()
+ : (Date.now()+"-"+Math.random().toString(36).slice(2));
+
+async function trainingHeartbeat(){
+ try{
+  const r=await fetch("/api/training-heartbeat",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({session_id:trainingSessionId})
+  });
+  if(r.ok){
+   const d=await r.json();
+   const n=document.getElementById("trainerCount");
+   if(n)n.textContent=d.active_trainers;
+  }
+ }catch(_){}
+}
+trainingHeartbeat();
+setInterval(trainingHeartbeat,15000);
+window.addEventListener("pagehide",()=>{
+ try{
+  navigator.sendBeacon("/api/training-leave",
+   new Blob([JSON.stringify({session_id:trainingSessionId})],{type:"application/json"}));
+ }catch(_){}
+});
+
+</script>
+</body></html>

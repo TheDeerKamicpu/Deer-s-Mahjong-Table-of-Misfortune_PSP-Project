@@ -1,0 +1,178 @@
+
+*{box-sizing:border-box}html{background:#080d13}body{margin:0;color:#edf2f7;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;background:radial-gradient(circle at top,#18232d 0,#080d13 62%);min-height:100vh}
+button{font:inherit}.game-shell{width:min(1280px,100%);margin:auto;padding:16px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+h1{font-size:clamp(1.25rem,3vw,2rem);letter-spacing:.12em;margin:0}h1 span{font-weight:400;color:#a7b0ba}.topbar p{margin:.25rem 0 0;color:#8996a5}
+.top-actions{display:flex;align-items:center;gap:10px}.top-actions span{padding:9px 12px;border:1px solid #35414e;border-radius:999px;color:#cbd5df}.top-actions button,.actionbar button{border:1px solid #586676;background:#202b37;color:white;border-radius:10px;padding:10px 15px;font-weight:800;cursor:pointer}
+.table{position:relative;display:grid;grid-template-columns:minmax(150px,.72fr) minmax(330px,1.8fr) minmax(150px,.72fr);grid-template-rows:auto minmax(340px,1fr) auto;grid-template-areas:". north ." "west felt east" ". south .";gap:10px;background:#121a21;border:1px solid #303b45;border-radius:24px;padding:12px}
+.seat{background:#10171e;border:1px solid #2d3944;border-radius:15px;padding:10px;min-width:0}.north{grid-area:north}.west{grid-area:west}.eastside{grid-area:east}.south{grid-area:south}
+.seathead{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:.82rem}.seathead span{color:#93a0ad}.concealed{display:flex;justify-content:center;gap:2px;margin:9px 0;overflow:hidden}
+.tileback{display:inline-grid;place-items:center;width:24px;height:38px;border-radius:4px;background:linear-gradient(135deg,#234e63,#0e2d3c);border:1px solid #7f9ba8;color:#8bb5c8;font-size:.65rem;box-shadow:inset 0 0 0 2px #153a4b}
+.felt{grid-area:felt;border:8px solid #27392f;border-radius:28px;background:radial-gradient(circle,#176443,#0d4931 72%);padding:14px;min-height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:inset 0 0 45px #001b11}
+.turn-pill{background:#081d15aa;border:1px solid #4d8a70;color:#e7fff5;border-radius:999px;padding:7px 12px;font-size:.78rem;font-weight:800;letter-spacing:.08em}.river{display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:4px;max-width:520px;margin:18px auto}.last{min-height:24px;color:#d8f3e7;font-size:.85rem}
+.mjtile{width:46px;height:62px;border:0;border-bottom:5px solid #c8b991;border-radius:7px;background:linear-gradient(#fffef7,#eee5ce);font-family:"Segoe UI Symbol","Noto Sans Symbols 2",sans-serif;font-size:2.25rem;line-height:1;color:#111;display:inline-grid;place-items:center;padding:0;box-shadow:0 2px 4px #0007}.mjtile.small{width:29px;height:39px;border-bottom-width:3px;font-size:1.35rem;border-radius:5px}.mjtile:disabled{opacity:1}.mjtile.playable{cursor:pointer;transition:transform .12s ease,filter .12s ease}.mjtile.playable:hover,.mjtile.playable:focus-visible{transform:translateY(-8px);filter:brightness(1.08);outline:3px solid #e8c96b}
+.meldrow,.personal-discards{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}.meld{display:flex;align-items:end;gap:2px;background:#0b1117;padding:4px;border-radius:7px}.meld span{font-size:.58rem;color:#9ca8b4;margin-left:3px}
+.messagebar{margin:12px 0;background:#111b25;border:1px solid #344252;border-radius:12px;padding:12px 15px;text-align:center;font-weight:700}.actionbar{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;min-height:52px}.actionbar>div{display:flex;gap:8px;flex-wrap:wrap}.actionbar .danger{background:#8f2626;border-color:#c54c4c}.actionbar .special{background:#6a4f15;border-color:#a88937}.actionbar .muted{background:#313842}
+.hand-panel{background:#111922;border:1px solid #303c48;border-radius:16px;padding:13px;margin-top:10px}.hand-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.hand-head div{display:flex;flex-direction:column}.hand-head span{font-size:.8rem;color:#8f9ba7}.hand{display:flex;justify-content:center;flex-wrap:wrap;gap:4px;padding-top:7px}
+.result{margin-top:14px;border:1px solid #5a4930;background:#17140e;border-radius:16px;padding:16px}.winner{text-align:center}.winner span{font-size:.72rem;letter-spacing:.15em;color:#bfae8d}.winner h2{margin:.3rem 0}.winner strong{font-size:2rem}.breakdown{max-width:620px;margin:12px auto 0}.breakdown div{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-top:1px solid #3c3426}.hidden{display:none!important}
+@media(max-width:760px){.game-shell{padding:8px}.topbar{align-items:flex-start}.top-actions{flex-direction:column;align-items:flex-end}.table{grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto;grid-template-areas:"north north" "west east" "felt felt" "south south";padding:7px;border-radius:16px}.felt{min-height:240px;border-width:5px}.seat{padding:7px}.concealed .tileback{width:16px;height:28px}.mjtile{width:39px;height:54px;font-size:1.9rem}.hand{gap:3px}.personal-discards{max-height:90px;overflow:hidden}}
+@media(max-width:390px){.mjtile{width:34px;height:49px;font-size:1.65rem}.mjtile.small{width:25px;height:34px;font-size:1.15rem}.seathead{font-size:.72rem}.topbar p{display:none}}
+
+/* V3 — claim visibility + proper discard rows */
+.river-wrap{width:min(100%,570px);margin:14px auto;background:#092f20aa;border:1px solid #39765d;border-radius:12px;padding:9px}
+.river-label{text-align:left;font-size:.62rem;letter-spacing:.16em;color:#9ac7b3;margin-bottom:6px}
+.river{display:grid;grid-template-columns:repeat(12,minmax(25px,1fr));gap:4px;width:100%;margin:0}
+.river .mjtile.small{width:100%;max-width:39px;justify-self:center}
+.last-tile{outline:3px solid #f2cf63!important;box-shadow:0 0 0 4px #0008,0 0 16px #f2cf63!important}
+.claim-alert{width:min(100%,570px);margin:10px auto 0;padding:10px 12px;background:#3c2b08;border:2px solid #e5bd4f;border-radius:12px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;text-align:center}
+.claim-alert strong{color:#ffe08a;letter-spacing:.08em}.claim-alert span{color:#fff}.claim-alert b{width:100%;font-size:.78rem;color:#ffe8a8}
+.meldrow{position:relative;min-height:0}.meld-label{width:100%;font-size:.58rem;letter-spacing:.13em;color:#8998a7;margin-top:5px}
+.south .meldrow{justify-content:center;background:#0b111799;border-radius:9px;padding:5px;margin-top:8px}
+.actionbar:has(#claimButtons:not(:empty)){border:1px solid #d4ad45;background:#241d0d;border-radius:12px;padding:8px}
+@media(max-width:760px){
+ .river{grid-template-columns:repeat(8,minmax(25px,1fr))}
+ .river-wrap{padding:7px}
+}
+
+/* V4 — explicit decision flow + validated winning pair */
+.win-structure{max-width:760px;margin:14px auto;background:#0c1218;border:1px solid #46515d;border-radius:12px;padding:12px}
+.win-structure h3{text-align:center;margin:0 0 10px;font-size:.75rem;letter-spacing:.14em;color:#aeb9c5}
+.win-melds{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
+.win-melds span,.win-pair{background:#18222d;border:1px solid #344252;border-radius:8px;padding:8px 10px}
+.win-pair{width:max-content;margin:9px auto 0;border-color:#c6a64c;background:#2a230e}
+#claimButtons:not(:empty) button{min-width:120px}
+
+/* Winner reveal patch */
+.concealed.revealed-winner{
+  flex-wrap:wrap;
+  overflow:visible;
+  padding:7px;
+  background:#1d180b;
+  border:1px solid #c6a64c;
+  border-radius:9px;
+}
+.concealed.revealed-winner::before{
+  content:"WINNING TILES";
+  width:100%;
+  text-align:center;
+  font-size:.56rem;
+  letter-spacing:.14em;
+  color:#e0c76f;
+  margin-bottom:3px;
+}
+
+/* Natural turn pacing: clearly highlight the player whose turn is active. */
+.seat.active-turn{
+  border:2px solid #d6b84f;
+  box-shadow:0 0 0 2px rgba(214,184,79,.16),0 0 18px rgba(214,184,79,.20);
+}
+.seat.active-turn .seathead b::after{
+  content:"  • THINKING";
+  color:#e2c760;
+  font-size:.72em;
+  letter-spacing:.08em;
+}
+
+/* Human active draw — makes the tile just drawn unmistakable */
+.mjtile.drawn-tile{
+  transform:translateY(-10px) scale(1.08);
+  outline:4px solid #f2cf63;
+  outline-offset:2px;
+  box-shadow:0 0 0 3px #111,0 0 22px 7px rgba(242,207,99,.72),0 5px 8px #0009;
+  position:relative;
+  z-index:5;
+  font-weight:900;
+}
+.mjtile.drawn-tile::after{
+  content:"DRAW";
+  position:absolute;
+  top:-18px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:2px 5px;
+  border-radius:5px;
+  background:#f2cf63;
+  color:#111;
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+  font-size:.52rem;
+  font-weight:900;
+  letter-spacing:.08em;
+  line-height:1.2;
+}
+.mjtile.drawn-tile.playable:hover,
+.mjtile.drawn-tile.playable:focus-visible{
+  transform:translateY(-12px) scale(1.10);
+  outline:4px solid #f2cf63;
+}
+
+
+/* MANUAL MRH — intentionally darker than automatic/action gold */
+button.manual-mrh,
+.manual-mrh{
+  background:#4b4f54 !important;
+  border-color:#747a80 !important;
+  color:#f0f1f2 !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 2px 7px rgba(0,0,0,.35) !important;
+}
+button.manual-mrh:hover:not(:disabled),
+.manual-mrh:hover:not(:disabled){
+  background:#5a5f65 !important;
+  border-color:#92989e !important;
+  color:#fff !important;
+}
+button.manual-mrh:disabled,
+.manual-mrh:disabled{
+  background:#35383c !important;
+  border-color:#555a60 !important;
+  color:#969ba0 !important;
+  opacity:.72;
+}
+
+/* CHOW/PUNG immediate-discard restriction:
+   same value as the claimed discard is visible but unavailable for this discard. */
+.mjtile.claim-discard-locked{
+  opacity:.38;
+  filter:grayscale(.8);
+  cursor:not-allowed;
+  transform:none !important;
+  box-shadow:inset 0 0 0 2px rgba(180,185,190,.45) !important;
+}
+
+/* Current independent training browsers — GAME topbar */
+.trainer-counter{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:6px 9px;
+  border:1px solid #555b61;
+  border-radius:7px;
+  background:#24282c;
+  color:#b9bec3;
+  font-size:.68rem;
+  font-weight:800;
+  letter-spacing:.06em;
+  white-space:nowrap;
+}
+.trainer-counter b{color:#f1f2f3;font-size:.82rem}
+.trainer-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:#7fa36a;
+  box-shadow:0 0 6px rgba(127,163,106,.65);
+}
+
+.human-penalty{
+  margin:14px auto 0;
+  max-width:620px;
+  display:flex;
+  justify-content:space-between;
+  gap:18px;
+  padding:10px 12px;
+  border:1px solid #6b4f4f;
+  border-radius:8px;
+  background:#21191a;
+  font-weight:800;
+}
+.human-penalty b{white-space:nowrap}
+.mjtile .tile-face{display:block;width:92%;height:92%;object-fit:contain;pointer-events:none;user-select:none}
+.mjtile.small .tile-face{width:94%;height:94%}
+.doman-credit{margin:10px auto 2px;text-align:center;color:#73808b;font-size:.62rem}

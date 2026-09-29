@@ -1,0 +1,6 @@
+Place your MP3 in this folder and name it exactly:
+
+background.mp3
+
+Final path in the repo:
+static/audio/background.mp3
