@@ -22,7 +22,7 @@ LIBS = \
 
 EXTRA_TARGETS = EBOOT.PBP
 
-PSP_EBOOT_TITLE = The Deer's Mahjong Table of Misfortune
+PSP_EBOOT_TITLE = The Deer’s Mahjong Table of Misfortune
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 
